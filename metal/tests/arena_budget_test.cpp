@@ -85,6 +85,22 @@ int main() {
     ArenaMem sh = q6;   // STRATA_METAL_LEAVE_SHARE (for measuring)
     sh.leave_share = 0.30;
     check(std::fabs(footprint_cap(sh) - 0.70 * 137.4 * kGB) < 1e6, "STRATA_METAL_LEAVE_SHARE=0.30: the old 30% (96.2 GB)", footprint_cap(sh));
+    // STRATA_METAL_FILECACHE_HEADROOM_GB (for measuring): the margin above the file-cache floor.  It only moves the cap
+    // while the file-cache term is the floor; below the RAM share the share binds again (a headless M2 Ultra 64 GB,
+    // the community report bench/results/2026-11-01-community-m2-ultra-64gb: 68.7 GB RAM, 65.5 GB working set,
+    // filecache_min 7.11 GB, leave share 0.25)
+    ArenaMem m2u{68.7 * kGB, 65.5 * kGB, 7.9 * kGB, 53.5 * kGB};
+    m2u.filecache_min = 7.11 * kGB;
+    m2u.leave_share = 0.25;
+    check(std::fabs(footprint_cap(m2u) - 49.6 * kGB) < 0.1 * kGB, "M2 Ultra 64 GB at 0.25: the file-cache floor + 12 binds (cap 49.6)", footprint_cap(m2u));
+    m2u.headroom_gb = 6.0;
+    check(std::fabs(footprint_cap(m2u) - 51.5 * kGB) < 0.1 * kGB, "with headroom 6: the 0.25 share binds instead, only 51.5", footprint_cap(m2u));
+    m2u.leave_share = 0.19;
+    check(std::fabs(footprint_cap(m2u) - 55.6 * kGB) < 0.1 * kGB, "headroom 6 needs the share under 13.1/68.7 too: 55.6", footprint_cap(m2u));
+    ArenaMem fc2 = m5;   // where the file-cache term dominates, the override raises the cap by the headroom it saves
+    fc2.filecache_min = 50.0 * kGB;
+    fc2.headroom_gb = 6.0;
+    check(std::fabs(footprint_cap(fc2) - 81.4 * kGB) < 0.1 * kGB, "M5 Max, 50 GB floor, headroom 6: 81.4 instead of 75.4", footprint_cap(fc2));
     // the working set still binds where it is tighter than the RAM share
     ArenaMem m64{68.7 * kGB, 48.0 * kGB, 5.0 * kGB, 55.0 * kGB};
     check(std::fabs(footprint_cap(m64) - 41.2 * kGB) < 0.1 * kGB, "64 GB Mac: 60% of the RAM (41.2 GB), under the 48 GB working set", footprint_cap(m64));

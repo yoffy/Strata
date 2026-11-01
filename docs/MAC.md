@@ -258,6 +258,7 @@ For testing. All are off unless set; the defaults are described above.
 | `STRATA_METAL_CONTIG=0` | Streaming: read the model file even when the experts' copy is there |
 | `STRATA_METAL_ARENA_GB=N`, `STRATA_METAL_KEEP_FREE_GB=N` | Streaming: the arena's size, or the memory left to macOS |
 | `STRATA_METAL_LEAVE_SHARE=0.4` | Streaming, 64 GB or more: the share of the RAM left to macOS when the footprint cap is set |
+| `STRATA_METAL_FILECACHE_HEADROOM_GB=12` | Streaming, 64 GB or more: the margin above the file-cache floor in the footprint cap; it only bites while the file-cache term is the floor, below the RAM share the share binds again |
 | `STRATA_METAL_WIRE_ARENA=0` | Streaming, 64 GB or more: leave the filled arena pageable (default: wired) |
 | `STRATA_METAL_IGNORE_REPACK=1` | Start although a model repack or setup's preparation is running (the engine refuses by default) |
 | `STRATA_METAL_KEEP_HOST_WEIGHTS=1` | Streaming: keep the host code's own copies of the weights (2 to 3 GB) |

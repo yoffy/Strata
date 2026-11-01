@@ -44,6 +44,7 @@ struct ArenaMem {
     double keep_gb = -1;      // STRATA_METAL_KEEP_FREE_GB (< 0: unset)
     double arena_gb = -1;     // STRATA_METAL_ARENA_GB (< 0: unset)
     double leave_share = -1;  // STRATA_METAL_LEAVE_SHARE: the share of the RAM a big Mac leaves to macOS (< 0: kLeaveShare)
+    double headroom_gb = -1;  // STRATA_METAL_FILECACHE_HEADROOM_GB: the margin above the file-cache floor (< 0: kFileCacheHeadroom)
 };
 
 constexpr double kGB = 1e9;
@@ -70,7 +71,7 @@ constexpr double kGB = 1e9;
 // count as file cache, not against the floor.  UD-Q4_K_XL resident on the M5 Max (wired 91.7 GB, 67%), 40 GB write + 16 GB
 // program beside it: swapouts 0, compressor 5,500 pages, 63 tok/s.  So two caps:
 //   footprint_cap    anonymous memory (the streaming arena, Metal buffers, host memory): kLeaveShare = 40% of the RAM left
-//                    on a big Mac (at least the file-cache floor + 12 GB)
+//                    on a big Mac (at least the file-cache floor + 12 GB - STRATA_METAL_FILECACHE_HEADROOM_GB sets the 12)
 //   resident_cap     a resident pack's mapped bytes: kResidentLeaveShare = 30% left (the old rule, measured as above)
 constexpr double kLeaveShare = 0.40;
 constexpr double kResidentLeaveShare = 0.30;
@@ -84,8 +85,9 @@ inline double arena_keep(const ArenaMem& m) {
 /// The most the engine may hold as anonymous memory, all counted (arena + Metal buffers + host memory).
 inline double footprint_cap(const ArenaMem& m) {
     const double share = m.leave_share >= 0 ? m.leave_share : kLeaveShare;
+    const double headroom = m.headroom_gb >= 0 ? m.headroom_gb * kGB : kFileCacheHeadroom;
     double leave = arena_keep(m);
-    if (m.phys >= kBigMac) leave = std::max({leave, share * m.phys, m.filecache_min > 0 ? m.filecache_min + kFileCacheHeadroom : 0.0});
+    if (m.phys >= kBigMac) leave = std::max({leave, share * m.phys, m.filecache_min > 0 ? m.filecache_min + headroom : 0.0});
     return std::min(m.working_set, m.phys - leave);
 }
 

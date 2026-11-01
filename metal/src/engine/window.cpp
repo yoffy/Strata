@@ -1476,6 +1476,7 @@ bool Window::stream_arena(std::string& err) {
     if (const char* e = std::getenv("STRATA_METAL_KEEP_FREE_GB")) am.keep_gb = std::atof(e);
     if (const char* e = std::getenv("STRATA_METAL_ARENA_GB")) am.arena_gb = std::atof(e);
     if (const char* e = std::getenv("STRATA_METAL_LEAVE_SHARE")) am.leave_share = std::atof(e);   // for measuring; the default is kLeaveShare
+    if (const char* e = std::getenv("STRATA_METAL_FILECACHE_HEADROOM_GB")) am.headroom_gb = std::atof(e);   // for measuring; the default is kFileCacheHeadroom
     const double keep = arena_keep(am);
     const double avail = am.available;
     double budget = arena_budget(am);
